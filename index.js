@@ -16,38 +16,38 @@ function animaster() {
         element.style.transform = null;
     }
 
-    const animaster = {
+    return {
         _steps: [],
 
         fadeIn(element, duration) {
             return this
                 .addFadeIn(duration)
-                .play(element).resetFadeIn(element);
+                .play(element);
         },
 
         fadeOut(element, duration) {
             return this
                 .addFadeOut(duration)
-                .play(element).resetFadeOut(element);
+                .play(element);
         },
 
         move(element, duration, translation) {
             return this
                 .addMove(duration, translation)
-                .play(element).resetMoveAndScale(element);
+                .play(element);
         },
 
         scale(element, duration, ratio) {
             return this
                 .addScale(duration, ratio)
-                .play(element).resetMoveAndScale(element);
+                .play(element);
         },
 
         moveAndHide(element, duration) {
             const moveTime = duration * 2 / 5;
             const fadeTime = duration * 3 / 5;
 
-            this.move(element, moveTime, { x: 100, y: 20 });
+            this.move(element, moveTime, {x: 100, y: 20});
 
             setTimeout(() => {
                 this.fadeOut(element, fadeTime);
@@ -58,6 +58,7 @@ function animaster() {
             const part = duration / 3;
 
             this.fadeIn(element, part);
+
             setTimeout(() => {
                 this.fadeOut(element, part);
             }, part * 2);
@@ -132,10 +133,16 @@ function animaster() {
             });
 
             this._steps = [];
+
+            return {
+                reset() {
+                    resetFadeIn(element);
+                    resetFadeOut(element);
+                    resetMoveAndScale(element);
+                }
+            };
         }
     };
-
-    return animaster;
 }
 
 addListeners();
@@ -143,40 +150,55 @@ addListeners();
 function addListeners() {
     const animasterInstance = animaster();
 
-    document.getElementById('fadeInPlay')
-        .addEventListener('click', function () {
+    const fadeInPlay = document.getElementById('fadeInPlay');
+    if (fadeInPlay) {
+        fadeInPlay.addEventListener('click', function () {
             const block = document.getElementById('fadeInBlock');
             animasterInstance.fadeIn(block, 5000);
         });
+    }
 
-    document.getElementById('movePlay')
-        .addEventListener('click', function () {
+    const movePlay = document.getElementById('movePlay');
+    if (movePlay) {
+        movePlay.addEventListener('click', function () {
             const block = document.getElementById('moveBlock');
             animasterInstance.move(block, 1000, {x: 100, y: 10});
         });
+    }
 
-    document.getElementById('scalePlay')
-        .addEventListener('click', function () {
+    const scalePlay = document.getElementById('scalePlay');
+    if (scalePlay) {
+        scalePlay.addEventListener('click', function () {
             const block = document.getElementById('scaleBlock');
             animasterInstance.scale(block, 1000, 1.25);
         });
-    document.getElementById('moveAndHidePlay')
-        .addEventListener('click', function () {
+    }
+
+    const moveAndHidePlay = document.getElementById('moveAndHidePlay');
+    if (moveAndHidePlay) {
+        moveAndHidePlay.addEventListener('click', function () {
             const block = document.getElementById('moveAndHideBlock');
             animasterInstance.moveAndHide(block, 5000);
         });
-    document.getElementById('showAndHidePlay')
-        .addEventListener('click', function () {
+    }
+
+    const showAndHidePlay = document.getElementById('showAndHidePlay');
+    if (showAndHidePlay) {
+        showAndHidePlay.addEventListener('click', function () {
             const block = document.getElementById('showAndHideBlock') || document.getElementById('showAndHide');
             animasterInstance.showAndHide(block, 5000);
         });
-    document.getElementById('heartBeatingPlay')
-        .addEventListener('click', function () {
+    }
+
+    const heartBeatingPlay = document.getElementById('heartBeatingPlay');
+    if (heartBeatingPlay) {
+        heartBeatingPlay.addEventListener('click', function () {
             const block = document.getElementById('heartBeatingBlock') || document.getElementById('heartBeating');
             if (typeof animasterInstance.heartBeating === 'function') {
                 animasterInstance.heartBeating(block);
             }
         });
+    }
 }
 
 function getTransform(translation, ratio) {
