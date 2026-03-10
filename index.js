@@ -1,7 +1,7 @@
-
-
 function animaster() {
     const animaster = {
+        _steps: [],
+
         fadeIn(element, duration) {
             element.style.transitionDuration = `${duration}ms`;
             element.classList.remove('hide');
@@ -15,8 +15,9 @@ function animaster() {
         },
 
         move(element, duration, translation) {
-            element.style.transitionDuration = `${duration}ms`;
-            element.style.transform = getTransform(translation, null);
+            return this
+                .addMove(duration, translation)
+                .play(element);
         },
 
         scale(element, duration, ratio) {
@@ -28,7 +29,7 @@ function animaster() {
             const moveTime = duration * 2 / 5;
             const fadeTime = duration * 3 / 5;
 
-            this.move(element, moveTime, {x: 100, y: 20});
+            this.move(element, moveTime, { x: 100, y: 20 });
 
             setTimeout(() => {
                 this.fadeOut(element, fadeTime);
@@ -43,8 +44,35 @@ function animaster() {
             setTimeout(() => {
                 this.fadeOut(element, part);
             }, part * 2);
+        },
+
+        addMove(duration, translation) {
+            this._steps.push({
+                type: 'move',
+                duration: duration,
+                params: translation
+            });
+
+            return this;
+        },
+
+        play(element) {
+            let totalTime = 0;
+
+            this._steps.forEach(step => {
+                setTimeout(() => {
+                    if (step.type === 'move') {
+                        element.style.transitionDuration = `${step.duration}ms`;
+                        element.style.transform = getTransform(step.params, null);
+                    }
+                }, totalTime);
+
+                totalTime += step.duration;
+            });
+
+            this._steps = [];
         }
-    }
+    };
 
     return animaster;
 }
@@ -53,6 +81,7 @@ addListeners();
 
 function addListeners() {
     const animasterInstance = animaster();
+
     document.getElementById('fadeInPlay')
         .addEventListener('click', function () {
             const block = document.getElementById('fadeInBlock');
@@ -72,15 +101,16 @@ function addListeners() {
         });
 }
 
-
-
 function getTransform(translation, ratio) {
     const result = [];
+
     if (translation) {
         result.push(`translate(${translation.x}px,${translation.y}px)`);
     }
+
     if (ratio) {
         result.push(`scale(${ratio})`);
     }
+
     return result.join(' ');
 }
