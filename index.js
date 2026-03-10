@@ -37,9 +37,6 @@ function animaster() {
             return this
                 .addMove(duration, translation)
                 .play(element);
-            element.style.transitionDuration = `${duration}ms`;
-            element.style.transform = getTransform(translation, null);
-            return () => resetMoveAndScale(element);
         },
 
         scale(element, duration, ratio) {
@@ -54,18 +51,59 @@ function animaster() {
 
             this.move(element, moveTime, { x: 100, y: 20 });
 
-            setTimeout(() => {
+            const fadeTimeoutId = setTimeout(() => {
                 this.fadeOut(element, fadeTime);
             }, moveTime);
+
+            return {
+                reset() {
+                    clearTimeout(fadeTimeoutId);
+                    resetFadeOut(element);
+                    resetMoveAndScale(element);
+                }
+            };
         },
 
         showAndHide(element, duration) {
             const part = duration / 3;
 
             this.fadeIn(element, part);
+
             setTimeout(() => {
                 this.fadeOut(element, part);
             }, part * 2);
+        },
+
+        heartBeating(element) {
+            let stopped = false;
+            let timeoutId = null;
+            let enlarged = false;
+
+            const beat = () => {
+                if (stopped) {
+                    return;
+                }
+
+                if (!enlarged) {
+                    this.scale(element, 500, 1.4);
+                    enlarged = true;
+                } else {
+                    this.scale(element, 500, 1);
+                    enlarged = false;
+                }
+
+                timeoutId = setTimeout(beat, 500);
+            };
+
+            beat();
+
+            return {
+                stop() {
+                    stopped = true;
+                    clearTimeout(timeoutId);
+                    resetMoveAndScale(element)
+                }
+            };
         },
 
         addMove(duration, translation) {
@@ -103,6 +141,8 @@ addListeners();
 
 function addListeners() {
     const animasterInstance = animaster();
+    let heartBeatingAnimation = null;
+    let moveAndHideAnimation = null;
 
     document.getElementById('fadeInPlay')
         .addEventListener('click', function () {
@@ -121,21 +161,48 @@ function addListeners() {
             const block = document.getElementById('scaleBlock');
             animasterInstance.scale(block, 1000, 1.25);
         });
+
     document.getElementById('moveAndHidePlay')
         .addEventListener('click', function () {
             const block = document.getElementById('moveAndHideBlock');
-            animasterInstance.moveAndHide(block, 5000);
+
+            if (moveAndHideAnimation && typeof moveAndHideAnimation.reset === 'function') {
+                moveAndHideAnimation.reset();
+            }
+
+            moveAndHideAnimation = animasterInstance.moveAndHide(block, 5000);
         });
+
+    document.getElementById('moveAndHideReset')
+        .addEventListener('click', function () {
+            if (moveAndHideAnimation && typeof moveAndHideAnimation.reset === 'function') {
+                moveAndHideAnimation.reset();
+                moveAndHideAnimation = null;
+            }
+        });
+
     document.getElementById('showAndHidePlay')
         .addEventListener('click', function () {
             const block = document.getElementById('showAndHideBlock') || document.getElementById('showAndHide');
             animasterInstance.showAndHide(block, 5000);
         });
+
     document.getElementById('heartBeatingPlay')
         .addEventListener('click', function () {
             const block = document.getElementById('heartBeatingBlock') || document.getElementById('heartBeating');
-            if (typeof animasterInstance.heartBeating === 'function') {
-                animasterInstance.heartBeating(block);
+
+            if (heartBeatingAnimation) {
+                heartBeatingAnimation.stop();
+            }
+
+            heartBeatingAnimation = animasterInstance.heartBeating(block);
+        });
+
+    document.getElementById('heartBeatingStop')
+        .addEventListener('click', function () {
+            if (heartBeatingAnimation) {
+                heartBeatingAnimation.stop();
+                heartBeatingAnimation = null;
             }
         });
 }
